@@ -10,64 +10,39 @@ import Head from 'next/head';
 import moment from 'moment';
 import Loader from 'components/templates/loader'
 import Chats from 'components/templates/chats'
-import { useRouter } from 'next/dist/client/router';
 
 interface LandingPageProps {
   users: UserInterface[];
   chats: ChatInterface[];
   messages: MessageInterface[];
+  currentChat: ChatInterface
 };
 
 
 type LoadingState = 'LOADING' | 'ANIMATION_START' | 'ANIMATION_END'
 
-const LandingPage = ({ users, chats, messages}: LandingPageProps) => {
+const LandingPage = ({ users, chats, messages, currentChat }: LandingPageProps) => {
   const [search, setSearch] = useState('')
-  const router = useRouter()
   const filteredChats = useMemo(() => chats.filter(c => users.find(u => u.id === c.withUser).name.toLowerCase().includes(search.toLowerCase().trim())), [search, chats, users])
   const [loading, setLoading] = useState<LoadingState>('LOADING')
 
   // should maybe use the next router here for proper routing
-  const [currentChat, setCurrentChat] = useState(chats[0])
-
-  // const [filteredChats, setFilteredChats] = useState(chats.slice())
-
-  // useEffect(() => {
-  //   setFilteredChats()
-  // }, [search])
-
-  // TODO: find something like the <Transition> component in Vue to interact with templates in Next.js
-  // Fast & easy trick for now
-  useEffect(() => {
-    if (loading === 'LOADING') {
-      setTimeout(() => {
-        setLoading('ANIMATION_START')
-        setTimeout(() => {
-          setLoading('ANIMATION_END')
-          router.push(`/chat/${chats[0].id}`)
-        }, 500)
-      }, 200)
-    }
-  }, [loading])
-
-  const pageStatusFromLoadingState = (loading: LoadingState) => {
-    switch (loading) {
-      case 'LOADING':
-        return 'Loading...'
-      case 'ANIMATION_START':
-        return 'Welcome'
-      case 'ANIMATION_END':
-        return 'Chats';
-    }
-  }
+  // const [currentChat, setCurrentChat] = useState(chats[0])
 
   const template = (
     <>
       <Head>
-        <title>TakeHome - { pageStatusFromLoadingState(loading) }</title>
+        <title>TakeHome - { users.find(u => u.id === currentChat.withUser).name }</title>
       </Head>
       <div className={`bg-white dark:bg-black h-screen w-full flex flex-col items-center justify-center`}>
-        <Loader loaded={loading === 'ANIMATION_START'} />
+        <Chats
+          chats={filteredChats}
+          search={search}
+          currentChat={currentChat}
+          setSearch={setSearch}
+          messages={messages}
+          users={users}
+        />
       </div>
     </>
   );
@@ -75,17 +50,19 @@ const LandingPage = ({ users, chats, messages}: LandingPageProps) => {
   return template
 };
 
-export const getServerSideProps = () => {
+export const getServerSideProps = (ctx) => {
   // This is only an exemple of how you could pass data from server to client,
   // you may create another page and not use that use
   const users: UserInterface[] = generateUsers();
   const { chats, messages }: { chats: ChatInterface[], messages: MessageInterface[] } = generateChats();
 
-  console.log(users, chats)
+  const chatId = ctx.query.id
+
+  console.log('changing to ', chatId, chats.find(c => c.id === chatId))
 
   return {
     props: {
-      users, chats, messages,
+      users, chats, messages, currentChat: chats.find(c => c.id === chatId)
     },
   };
 }

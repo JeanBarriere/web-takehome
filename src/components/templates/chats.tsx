@@ -7,6 +7,7 @@ import SearchIconSvg from 'icons/search-icon.svg';
 import UserInterface from "types/users";
 import MessageInterface from "types/messages";
 import ChatInterface from "types/chats";
+import Link from 'next/link'
 
 
 type ChatsProps = HTMLAttributes<HTMLDivElement> & {
@@ -14,12 +15,11 @@ type ChatsProps = HTMLAttributes<HTMLDivElement> & {
   messages: MessageInterface[]
   users: UserInterface[]
   currentChat: ChatInterface
-  setCurrentChat: (chat: ChatInterface) => void 
   setSearch: (query: string) => void
   search: string
 }
 
-const Chats = forwardRef<HTMLDivElement, ChatsProps>(({ chats, currentChat, setCurrentChat, setSearch, search, messages, users, ...props }, ref) => {
+const Chats = forwardRef<HTMLDivElement, ChatsProps>(({ chats, currentChat, setSearch, search, messages, users, ...props }, ref) => {
   const inputRef = useRef<HTMLInputElement>(null)
 
   const handleSearch = (event: ChangeEvent<HTMLInputElement>) => {
@@ -53,18 +53,20 @@ const Chats = forwardRef<HTMLDivElement, ChatsProps>(({ chats, currentChat, setC
                   return <></>
                 }
                 return (
-                  <div className={`${currentChat.id === chat.id ? 'bg-gray-card' : 'bg-transparent'} bg-opacity-20 p-2 rounded-card flex w-full cursor-pointer justify-start`} key={user.id} onClick={() => { setCurrentChat(chat); setSearch('') }}>
-                  <div className="flex w-[50px] h-[50px]">
-                      <Image src={user.profilePicture} layout="fixed" alt="my profile" width={50} height={50} className="w-[50px] h-[50px] rounded-full" />
-                    </div>
-                    <div className="tablet:mx-4 hidden tablet:flex flex-col w-fit-content overflow-hidden">
-                      <span className="text-lg text-black dark:text-white">{ user.name }</span>
-                      <p className="text-sm text-gray-subtext overflow-ellipsis overflow-hidden whitespace-nowrap">{ lastMessage.content }</p>
-                    </div>
-                    <div className="hidden tablet:block text-right text-gray-subtext flex-grow h-full self-end text-sm">
-                      <p>{ moment(lastMessage.date).fromNow(true) }</p>
-                    </div>
-                  </div>
+                  <Link href={`/chat/${chat.id}`} key={chat.id}>
+                    <a className={`${currentChat.id === chat.id ? 'bg-gray-card' : 'bg-transparent'} bg-opacity-20 p-2 rounded-card flex w-full cursor-pointer justify-start`} onClick={() => { setSearch('') }}>
+                      <div className="flex w-[50px] h-[50px]">
+                        <Image src={user.profilePicture} layout="fixed" alt="my profile" width={50} height={50} className="w-[50px] h-[50px] rounded-full" />
+                      </div>
+                      <div className="tablet:mx-4 hidden tablet:flex flex-col w-fit-content overflow-hidden">
+                        <span className="text-lg text-black dark:text-white">{ user.name }</span>
+                        <p className="text-sm text-gray-subtext overflow-ellipsis overflow-hidden whitespace-nowrap">{ lastMessage.content }</p>
+                      </div>
+                      <div className="hidden tablet:block text-right text-gray-subtext flex-grow h-full self-end text-sm">
+                        <p>{ moment(lastMessage.date).fromNow(true) }</p>
+                      </div>
+                    </a>
+                  </Link>
                 )
               })}
             </div>
